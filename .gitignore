@@ -3,6 +3,10 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+# Generated model artifacts (regenerate from the notebook)
+dashboard/frequency_model.pickle
+dashboard/pricing_artifacts.pkl
+
 # C extensions
 *.so
 

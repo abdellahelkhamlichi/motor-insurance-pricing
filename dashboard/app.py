@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import statsmodels.api as sm
 import pickle
+from pathlib import Path
 import plotly.graph_objects as go
 
 # ============================================================
@@ -48,16 +49,22 @@ st.markdown("""
 # ============================================================
 # LOAD MODEL ARTIFACTS
 # ============================================================
-from pathlib import Path
-
-# Resolve paths relative to this script's location, regardless of
-# the working directory Streamlit Cloud runs from (repo root, not dashboard/)
-BASE_DIR = Path(__file__).resolve().parent
+ARTIFACTS_DIR = Path(__file__).resolve().parent
 
 @st.cache_resource
 def load_artifacts():
-    model = sm.load(str(BASE_DIR / 'frequency_model.pickle'))
-    with open(BASE_DIR / 'pricing_artifacts.pkl', 'rb') as f:
+    model_path = ARTIFACTS_DIR / 'frequency_model.pickle'
+    pricing_path = ARTIFACTS_DIR / 'pricing_artifacts.pkl'
+
+    if not model_path.is_file() or not pricing_path.is_file():
+        missing = [str(path.name) for path in (model_path, pricing_path) if not path.is_file()]
+        raise FileNotFoundError(
+            f"Artefacts manquants dans {ARTIFACTS_DIR}: {', '.join(missing)}. "
+            "Executez la derniere cellule du notebook pour les generer."
+        )
+
+    model = sm.load(model_path)
+    with pricing_path.open('rb') as f:
         pricing = pickle.load(f)
     return model, pricing
 
