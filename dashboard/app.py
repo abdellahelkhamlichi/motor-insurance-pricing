@@ -48,10 +48,16 @@ st.markdown("""
 # ============================================================
 # LOAD MODEL ARTIFACTS
 # ============================================================
+from pathlib import Path
+
+# Resolve paths relative to this script's location, regardless of
+# the working directory Streamlit Cloud runs from (repo root, not dashboard/)
+BASE_DIR = Path(__file__).resolve().parent
+
 @st.cache_resource
 def load_artifacts():
-    model = sm.load('frequency_model.pickle')
-    with open('pricing_artifacts.pkl', 'rb') as f:
+    model = sm.load(str(BASE_DIR / 'frequency_model.pickle'))
+    with open(BASE_DIR / 'pricing_artifacts.pkl', 'rb') as f:
         pricing = pickle.load(f)
     return model, pricing
 
