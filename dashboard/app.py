@@ -54,12 +54,53 @@ from pathlib import Path
 # the working directory Streamlit Cloud runs from (repo root, not dashboard/)
 BASE_DIR = Path(__file__).resolve().parent
 
+DEFAULT_COEFFICIENTS = {
+    'Intercept': -2.85,
+    'VehPower': 0.045,
+    'BonusMalus': 0.023,
+    'Area_encoded': 0.12,
+    'VehGas_encoded': 0.05,
+    'C(DrivAge_band)[T.26-35]': -0.16,
+    'C(DrivAge_band)[T.36-45]': 0.11,
+    'C(DrivAge_band)[T.46-55]': 0.25,
+    'C(DrivAge_band)[T.56-65]': 0.13,
+    'C(DrivAge_band)[T.65+]': 0.22,
+    'C(VehAge_band)[T.3-5]': 0.03,
+    'C(VehAge_band)[T.6-10]': 0.08,
+    'C(VehAge_band)[T.10+]': 0.18,
+}
+
+DEFAULT_PRICING = {
+    'severity_by_vehage': {'0-2': 1300, '3-5': 1500, '6-10': 1700, '10+': 1900},
+    'expense_ratio': 0.12,
+    'profit_margin': 0.08,
+    'reinsurance_loading': 0.03,
+}
+
 @st.cache_resource
 def load_artifacts():
-    with open(BASE_DIR / 'model_coefficients.json', 'r') as f:
-        coefs = json.load(f)
-    with open(BASE_DIR / 'pricing_artifacts.pkl', 'rb') as f:
-        pricing = pickle.load(f)
+    coef_path = BASE_DIR / 'model_coefficients.json'
+    artifact_path = BASE_DIR / 'pricing_artifacts.pkl'
+
+    if coef_path.exists():
+        with open(coef_path, 'r') as f:
+            coefs = json.load(f)
+    else:
+        st.warning(
+            "Fichier de coefficients absent: utilisation d'un jeu de valeurs de secours pour éviter un crash. "
+            "Pour une précision maximale, générez le fichier model_coefficients.json depuis le notebook."
+        )
+        coefs = DEFAULT_COEFFICIENTS
+
+    if artifact_path.exists():
+        with open(artifact_path, 'rb') as f:
+            pricing = pickle.load(f)
+    else:
+        st.warning(
+            "Fichier pricing_artifacts.pkl absent: utilisation des paramètres de tarification par défaut."
+        )
+        pricing = DEFAULT_PRICING
+
     return coefs, pricing
 
 coefs, pricing = load_artifacts()
