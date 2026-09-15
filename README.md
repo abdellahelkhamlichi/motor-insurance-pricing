@@ -36,7 +36,6 @@ motor-insurance-pricing/
 ## Interactive dashoard URL
 motor-insurance-pricing-hdusnshbnhqsr6gfnrm7is.streamlit.app/
 
-motor-insurance-pricing-hdusnshbnhqsr6gfnrm7is.streamlit.app
 ## Key Results
 *(To be filled in after model training — e.g. model performance metrics, top risk factors, pricing examples)*
 
