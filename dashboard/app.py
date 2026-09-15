@@ -1,9 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import statsmodels.api as sm
 import pickle
-from pathlib import Path
 import plotly.graph_objects as go
 
 # ============================================================
@@ -49,26 +47,36 @@ st.markdown("""
 # ============================================================
 # LOAD MODEL ARTIFACTS
 # ============================================================
-ARTIFACTS_DIR = Path(__file__).resolve().parent
+import json
+from pathlib import Path
+
+# Resolve paths relative to this script's location, regardless of
+# the working directory Streamlit Cloud runs from (repo root, not dashboard/)
+BASE_DIR = Path(__file__).resolve().parent
 
 @st.cache_resource
 def load_artifacts():
-    model_path = ARTIFACTS_DIR / 'frequency_model.pickle'
-    pricing_path = ARTIFACTS_DIR / 'pricing_artifacts.pkl'
-
-    if not model_path.is_file() or not pricing_path.is_file():
-        missing = [str(path.name) for path in (model_path, pricing_path) if not path.is_file()]
-        raise FileNotFoundError(
-            f"Artefacts manquants dans {ARTIFACTS_DIR}: {', '.join(missing)}. "
-            "Executez la derniere cellule du notebook pour les generer."
-        )
-
-    model = sm.load(model_path)
-    with pricing_path.open('rb') as f:
+    with open(BASE_DIR / 'model_coefficients.json', 'r') as f:
+        coefs = json.load(f)
+    with open(BASE_DIR / 'pricing_artifacts.pkl', 'rb') as f:
         pricing = pickle.load(f)
-    return model, pricing
+    return coefs, pricing
 
-nb_model, pricing = load_artifacts()
+coefs, pricing = load_artifacts()
+
+def predict_frequency(veh_power, bonus_malus, area_encoded, veh_gas_encoded,
+                       drivage_band, vehage_band, exposure):
+    """Manually reconstruct the GLM log-linear predictor from saved coefficients.
+    Equivalent to nb_model.predict() but without needing the statsmodels object."""
+    lp = coefs['Intercept']
+    lp += coefs.get(f'C(DrivAge_band)[T.{drivage_band}]', 0.0)
+    lp += coefs.get(f'C(VehAge_band)[T.{vehage_band}]', 0.0)
+    lp += coefs['VehPower'] * veh_power
+    lp += coefs['BonusMalus'] * bonus_malus
+    lp += coefs['Area_encoded'] * area_encoded
+    lp += coefs['VehGas_encoded'] * veh_gas_encoded
+    lp += np.log(exposure)
+    return np.exp(lp)
 
 AREA_MAP = {'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6}
 DRIVAGE_BANDS = ['18-25', '26-35', '36-45', '46-55', '56-65', '65+']
@@ -93,17 +101,15 @@ def compute_premium(driv_age, veh_age, veh_power, bonus_malus, area, veh_gas, ex
     drivage_band = get_age_band(driv_age)
     vehage_band = get_vehage_band(veh_age)
 
-    input_df = pd.DataFrame({
-        'VehPower': [veh_power],
-        'BonusMalus': [bonus_malus],
-        'Area_encoded': [AREA_MAP[area]],
-        'VehGas_encoded': [1 if veh_gas == 'Diesel' else 0],
-        'DrivAge_band': [drivage_band],
-        'VehAge_band': [vehage_band],
-        'Exposure': [exposure]
-    })
-
-    predicted_freq = nb_model.predict(input_df, offset=np.log(input_df['Exposure']))[0]
+    predicted_freq = predict_frequency(
+        veh_power=veh_power,
+        bonus_malus=bonus_malus,
+        area_encoded=AREA_MAP[area],
+        veh_gas_encoded=1 if veh_gas == 'Diesel' else 0,
+        drivage_band=drivage_band,
+        vehage_band=vehage_band,
+        exposure=exposure
+    )
     expected_severity = pricing['severity_by_vehage'].get(
         vehage_band, np.mean(list(pricing['severity_by_vehage'].values()))
     )
@@ -227,7 +233,7 @@ with tab2:
         "this is the transparency regulators expect from actuarial pricing models."
     )
 
-    params = nb_model.params
+    params = coefs
     rows = []
     for band in DRIVAGE_BANDS[1:]:
         key = f"C(DrivAge_band)[T.{band}]"
