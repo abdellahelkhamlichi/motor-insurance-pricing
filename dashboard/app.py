@@ -9,38 +9,124 @@ import plotly.graph_objects as go
 # ============================================================
 st.set_page_config(
     page_title="Motor Insurance Pricing Engine",
-    page_icon="🚗",
+    page_icon="✦",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 st.markdown("""
 <style>
-    .main-header {
-        font-size: 2.4rem;
-        font-weight: 700;
-        color: #1E3A5F;
-        margin-bottom: 0;
+    :root {
+        --ink: #18252b;
+        --muted: #68777c;
+        --paper: #f6f7f2;
+        --panel: #ffffff;
+        --line: #dfe5df;
+        --lime: #c9e86b;
+        --coral: #ef775f;
+        --teal: #2b7772;
     }
-    .sub-header {
-        font-size: 1.05rem;
-        color: #6B7280;
+
+    .stApp {
+        background: var(--paper);
+        color: var(--ink);
+    }
+    [data-testid="stSidebar"] {
+        background: #eef2e9;
+        border-right: 1px solid var(--line);
+    }
+    [data-testid="stSidebar"] > div:first-child { padding-top: 2rem; }
+    .block-container { max-width: 1440px; padding: 3rem 4rem 2rem; }
+    h1, h2, h3, h4, p, label, button, input, textarea, select {
+        font-family: "Avenir Next", "Trebuchet MS", sans-serif;
+    }
+    h2, h3 { color: var(--ink); letter-spacing: 0; }
+    .hero {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 2rem;
+        padding: 1.5rem 0 2.2rem;
+        border-bottom: 1px solid var(--line);
         margin-bottom: 1.5rem;
     }
+    .main-header {
+        font-family: Georgia, serif;
+        font-size: clamp(2.6rem, 5vw, 4.8rem);
+        line-height: .94;
+        font-weight: 700;
+        color: var(--ink);
+        margin-bottom: 0;
+        letter-spacing: -0.03em;
+    }
+    .sub-header {
+        max-width: 700px;
+        font-size: 1rem;
+        line-height: 1.55;
+        color: var(--muted);
+        margin: .8rem 0 0;
+    }
+    .eyebrow {
+        display: inline-block;
+        color: var(--teal);
+        font-size: .72rem;
+        font-weight: 800;
+        letter-spacing: .16em;
+        text-transform: uppercase;
+        margin-bottom: .8rem;
+    }
+    .hero-mark {
+        display: grid;
+        place-items: center;
+        width: 72px;
+        height: 72px;
+        flex: 0 0 72px;
+        border-radius: 50%;
+        background: var(--lime);
+        color: var(--ink);
+        font-family: Georgia, serif;
+        font-size: 2.5rem;
+        transform: rotate(-8deg);
+    }
     div[data-testid="stMetricValue"] {
-        font-size: 1.6rem;
-        color: #1E3A5F;
+        font-family: Georgia, serif;
+        font-size: 1.8rem;
+        color: var(--ink);
+    }
+    div[data-testid="stMetric"] {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-top: 4px solid var(--lime);
+        padding: 1rem 1.1rem;
+        min-height: 112px;
+        box-shadow: 0 8px 24px rgba(24, 37, 43, .05);
+    }
+    div[data-testid="stMetricLabel"] { color: var(--muted); }
+    .section-label {
+        color: var(--teal);
+        font-size: .75rem;
+        font-weight: 800;
+        letter-spacing: .14em;
+        text-transform: uppercase;
     }
     .stButton>button {
-        background-color: #1E3A5F;
-        color: white;
-        border-radius: 8px;
-        padding: 0.5rem 2rem;
+        background-color: var(--ink);
+        color: var(--lime);
+        border-radius: 999px;
+        padding: 0.6rem 1.4rem;
         font-weight: 600;
         border: none;
     }
-    .stButton>button:hover { background-color: #2C5282; }
-    .stTabs [data-baseweb="tab"] { font-size: 1rem; font-weight: 600; }
+    .stButton>button:hover { background-color: var(--teal); color: white; }
+    .stTabs [data-baseweb="tab"] { font-size: .95rem; font-weight: 700; }
+    .stTabs [aria-selected="true"] { color: var(--teal); }
+    .stTabs [data-baseweb="tab-highlight"] { background: var(--coral); }
+    div[data-testid="stExpander"] { border-color: var(--line); background: var(--panel); }
+    @media (max-width: 800px) {
+        .block-container { padding: 1.5rem 1rem 2rem; }
+        .hero { align-items: flex-start; }
+        .hero-mark { display: none; }
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -192,10 +278,11 @@ def risk_gauge(freq, title="Claim Frequency Risk"):
 # ============================================================
 # HEADER
 # ============================================================
-st.markdown('<p class="main-header">🚗 Motor Insurance Pricing Engine</p>', unsafe_allow_html=True)
 st.markdown(
-    '<p class="sub-header">Actuarial pricing model — Frequency-Severity methodology (Negative Binomial GLM), '
-    'trained on 678,000+ real motor insurance policies (freMTPL2 dataset)</p>',
+    '<div class="hero"><div><div class="eyebrow">Actuarial decision system</div>'
+    '<p class="main-header">Motor insurance<br>pricing engine</p>'
+    '<p class="sub-header">A transparent frequency-severity model for turning a driver profile into a defensible commercial premium.</p>'
+    '</div><div class="hero-mark">✦</div></div>',
     unsafe_allow_html=True
 )
 
